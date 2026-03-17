@@ -8,6 +8,7 @@ import TrendChart        from '../components/TrendChart';
 import AlertBox          from '../components/AlertBox';
 import { fmt, pct }      from '../utils/format';
 import AIReportModal    from '../components/AIReportModal';
+import ThemeToggle      from '../components/ThemeToggle';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
@@ -150,6 +151,7 @@ export default function ProductDetail() {
         <a className="nav-logo" href="/">BizTrack</a>
         <div className="nav-links">
           <button className="btn btn-outline" onClick={() => navigate('/')} style={{ fontSize: 12, padding: '6px 14px' }}>Back</button>
+          <ThemeToggle />
           <button className="btn btn-outline" onClick={() => setShowAI(true)} style={{ fontSize: 12, padding: '6px 14px', borderColor: 'rgba(124,109,250,0.5)', color: 'var(--acc)' }}>🤖 AI Analysis</button>
           <button className="btn btn-outline" onClick={saveSnapshot} style={{ fontSize: 12, padding: '6px 14px' }}>Snapshot</button>
           <button className="btn btn-primary" onClick={saveProduct} disabled={saving} style={{ fontSize: 12, padding: '6px 14px' }}>

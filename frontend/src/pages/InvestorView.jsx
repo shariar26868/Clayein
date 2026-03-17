@@ -1,27 +1,24 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { investorAPI } from '../services/api';
-import KPICard         from '../components/KPICard';
-import EvalCard        from '../components/EvalCard';
-import EquityBreakdown from '../components/EquityBreakdown';
-import ProfitShareCard from '../components/ProfitShareCard';
-import AlertBox        from '../components/AlertBox';
-import { fmt, pct }   from '../utils/format';
+import { useNavigate }        from 'react-router-dom';
+import { investorAPI }        from '../services/api';
+import KPICard                from '../components/KPICard';
+import EvalCard               from '../components/EvalCard';
+import EquityBreakdown        from '../components/EquityBreakdown';
+import ProfitShareCard        from '../components/ProfitShareCard';
+import AlertBox               from '../components/AlertBox';
+import { fmt, pct }           from '../utils/format';
+import ThemeToggle             from '../components/ThemeToggle';
 
 export default function InvestorView() {
   const navigate = useNavigate();
-  const [data, setData]     = useState(null);
+  const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
   const investorName = localStorage.getItem('investor_name') || 'Investor';
 
   useEffect(() => {
     investorAPI.getMyData()
       .then(r => setData(r.data))
-      .catch(() => {
-        // token invalid or expired — send back to login
-        localStorage.removeItem('investor_token');
-        navigate('/investor/login');
-      })
+      .catch(() => { localStorage.removeItem('investor_token'); navigate('/investor/login'); })
       .finally(() => setLoading(false));
   }, []);
 
@@ -35,65 +32,48 @@ export default function InvestorView() {
   if (loading) return <div className="wrap"><div className="spinner" /></div>;
   if (!data)   return null;
 
-  const { product, metrics, myShare } = data;
-  const m = metrics;
+  const { product, metrics: m, myShare } = data;
 
   return (
     <>
-      {/* Nav */}
       <nav className="nav">
-        <span className="nav-logo">BizTrack</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 12, color: 'var(--muted2)' }}>{investorName}</span>
-          <button className="btn btn-outline" onClick={logout} style={{ padding: '6px 14px', fontSize: 12 }}>
-            Logout
-          </button>
+        <span className="nav-logo" style={{ background:'linear-gradient(135deg,#22d3ee,#60a5fa,#a78bfa)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>BizTrack</span>
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+          <div style={{ textAlign:'right' }}>
+            <div style={{ fontSize:13, fontWeight:600, color:'var(--text)' }}>{investorName}</div>
+            <div style={{ fontSize:11, color:'var(--muted)' }}>Investor</div>
+          </div>
+          <ThemeToggle />
+          <button className="btn btn-outline" onClick={logout} style={{ fontSize:12, padding:'6px 14px' }}>Logout</button>
         </div>
       </nav>
 
       <div className="wrap">
-        {/* Header */}
-        <header style={{ textAlign: 'center', marginBottom: 36 }}>
-          <div className="tag">Investor View · Read Only</div>
-          <h1 style={{
-            fontFamily: 'Syne,sans-serif', fontSize: 'clamp(22px,4vw,36px)', fontWeight: 800,
-            background: 'linear-gradient(130deg,#fff 40%,var(--acc))',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          }}>
+        <div className="page-header">
+          <div style={{ display:'inline-block', fontSize:10, letterSpacing:'0.2em', textTransform:'uppercase', fontWeight:700, background:'linear-gradient(135deg,rgba(6,182,212,0.15),rgba(37,99,235,0.15))', color:'var(--cyan)', border:'1px solid rgba(6,182,212,0.3)', borderRadius:99, padding:'5px 16px', marginBottom:16 }}>
+            Investor View · Read Only
+          </div>
+          <h1 style={{ fontSize:'clamp(22px,4vw,36px)', fontWeight:800, letterSpacing:'-0.03em', background:'linear-gradient(135deg,#fff,#a78bfa)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>
             {product.name}
           </h1>
-          {product.category && (
-            <p style={{ marginTop: 8, fontSize: 12, color: 'var(--muted2)' }}>{product.category}</p>
-          )}
-        </header>
-
-        {/* Alerts */}
-        {m.cashNet < 0 && (
-          <AlertBox type="warn" icon="⚠️">
-            Withdrawn amount exceeds profit by <strong>{fmt(Math.abs(m.cashNet))}</strong>
-          </AlertBox>
-        )}
-        {m.profit < 0 && (
-          <AlertBox type="warn" icon="📉">
-            Product is currently running at a loss of <strong>{fmt(Math.abs(m.profit))}</strong>
-          </AlertBox>
-        )}
-
-        {/* KPIs */}
-        <div className="section-label">Overview</div>
-        <div className="kpi-row">
-          <KPICard label="Revenue"      value={fmt(m.assets + m.expenses - m.stock)} note="Total sales"         color="var(--blue)"   />
-          <KPICard label="Gross Profit" value={fmt(m.profit)}                        note="Revenue − Expenses"  color={m.profit >= 0 ? 'var(--green)' : 'var(--red)'} />
-          <KPICard label="Profit Margin" value={pct(m.margin)}                       note="% of revenue"        color="var(--acc)"    />
-          <KPICard label="Total Capital" value={fmt(m.totalCapital)}                 note="All contributions"   color="var(--yellow)" />
+          {product.category && <p>{product.category}</p>}
         </div>
 
-        {/* My Share */}
+        {m.cashNet < 0 && <AlertBox type="warn" icon="⚠️">Withdrawn amount exceeds profit by <strong>{fmt(Math.abs(m.cashNet))}</strong></AlertBox>}
+        {m.profit  < 0 && <AlertBox type="warn" icon="📉">Product is currently at a loss of <strong>{fmt(Math.abs(m.profit))}</strong></AlertBox>}
+
+        <div className="section-label">Overview</div>
+        <div className="kpi-row">
+          <KPICard label="Gross Profit"   value={fmt(m.profit)}       note="Revenue − Expenses"  color={m.profit >= 0 ? 'linear-gradient(135deg,#10b981,#06b6d4)' : 'linear-gradient(135deg,#ef4444,#f97316)'} />
+          <KPICard label="Profit Margin"  value={pct(m.margin)}       note="% of revenue"         color="linear-gradient(135deg,#a78bfa,#7c3aed)" />
+          <KPICard label="Total Capital"  value={fmt(m.totalCapital)} note="All contributions"    color="linear-gradient(135deg,#f59e0b,#fbbf24)" />
+          <KPICard label="ROI"            value={pct(m.roi)}          note="Profit / Capital"     color="linear-gradient(135deg,#60a5fa,#22d3ee)" />
+        </div>
+
         <div className="section-label">Your Investment</div>
         <ProfitShareCard myShare={myShare} metrics={m} />
 
-        {/* Equity breakdown */}
-        <div className="section-label" style={{ marginTop: 24 }}>Equity & Profit Split</div>
+        <div className="section-label" style={{ marginTop:24 }}>Equity & Profit Split</div>
         <EquityBreakdown
           companyContribution={m.totalCapital - m.totalInvestorAmount}
           companyEquityPct={m.companyEquityPct}
@@ -101,20 +81,15 @@ export default function InvestorView() {
           investorEquityPct={m.investorEquityPct}
           companyProfitSharePct={m.companyProfitSharePct}
           companyProfitShare={m.companyProfitShare}
-          investorShares={m.investorShares}
+          investorShares={m.investorShares || []}
           profit={m.profit}
         />
 
-        {/* Company valuation */}
-        <div className="section-label" style={{ marginTop: 24 }}>Company Valuation</div>
-        <EvalCard
-          totalCapital={m.totalCapital}
-          assets={m.assets}
-          companyValue={m.companyValue}
-        />
+        <div className="section-label" style={{ marginTop:24 }}>Valuation</div>
+        <EvalCard totalCapital={m.totalCapital} assets={m.assets} companyValue={m.companyValue} />
 
         {product.notes && (
-          <div className="alert info" style={{ marginTop: 8 }}>
+          <div className="alert info" style={{ marginTop:8 }}>
             <span className="alert-icon">📝</span>
             <span>{product.notes}</span>
           </div>
