@@ -39,7 +39,7 @@ export default function ForgotPassword() {
         <div className="tag">Password Reset</div>
         <h1 style={{
           fontFamily: 'Syne,sans-serif', fontSize: 28, fontWeight: 800,
-          background: 'linear-gradient(130deg,#fff 40%,var(--acc))',
+          background: 'linear-gradient(130deg,var(--text) 40%,var(--acc))',
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
         }}>Forgot Password</h1>
         <p style={{ marginTop: 8, fontSize: 12, color: 'var(--muted2)' }}>

@@ -271,7 +271,7 @@ export default function InvestorView() {
               <div key={i} style={{
                 display:'flex', gap:14, alignItems:'flex-start',
                 padding:'12px 0', borderBottom: i < insights.length - 1 ? '1px solid var(--border)' : 'none',
-                fontSize:13, lineHeight:1.7, color:'#b0b0c8',
+                fontSize:13, lineHeight:1.7, color:'var(--insight-text, #b0b0c8)',
               }}>
                 <span style={{ fontSize:18, flexShrink:0 }}>{icon}</span>
                 <span dangerouslySetInnerHTML={{ __html: html

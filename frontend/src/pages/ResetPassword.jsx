@@ -44,7 +44,7 @@ export default function ResetPassword() {
         <div className="tag">New Password</div>
         <h1 style={{
           fontFamily: 'Syne,sans-serif', fontSize: 28, fontWeight: 800,
-          background: 'linear-gradient(130deg,#fff 40%,var(--acc))',
+          background: 'linear-gradient(130deg,var(--text) 40%,var(--acc))',
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
         }}>Reset Password</h1>
       </div>

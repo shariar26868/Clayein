@@ -168,7 +168,7 @@ export default function ProductDetail() {
           <div className="tag">Product Analysis</div>
           <h1 style={{
             fontFamily: 'Syne,sans-serif', fontSize: 'clamp(22px,4vw,36px)', fontWeight: 800,
-            background: 'linear-gradient(130deg,#fff 40%,var(--acc))',
+            background: 'linear-gradient(130deg,var(--text) 40%,var(--acc))',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           }}>
             {product.name}
@@ -393,7 +393,7 @@ export default function ProductDetail() {
               <div key={i} style={{
                 display: 'flex', gap: 14, alignItems: 'flex-start',
                 padding: '12px 0', borderBottom: i < insights.length - 1 ? '1px solid var(--border)' : 'none',
-                fontSize: 13, lineHeight: 1.7, color: '#b0b0c8',
+                fontSize: 13, lineHeight: 1.7, color: 'var(--insight-text, #b0b0c8)',
               }}>
                 <span style={{ fontSize: 18, flexShrink: 0 }}>{icon}</span>
                 <span dangerouslySetInnerHTML={{ __html: html
