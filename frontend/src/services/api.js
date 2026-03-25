@@ -50,4 +50,6 @@ export const aiAPI = {
 export const investorAPI = {
   login:     (creds) => investor.post('/investor/login', creds),
   getMyData: ()      => investor.get('/investor/me'),
+  aiReport:   (language) => investor.post('/ai/investor/report',   { language }),
+  aiForecast: (language) => investor.post('/ai/investor/forecast', { language }),
 };

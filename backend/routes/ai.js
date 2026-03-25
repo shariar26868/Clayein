@@ -1,9 +1,14 @@
-const router    = require('express').Router();
-const adminAuth = require('../middleware/adminAuth');
-const ctrl      = require('../controllers/aiController');
+const router       = require('express').Router();
+const adminAuth    = require('../middleware/adminAuth');
+const investorAuth = require('../middleware/investorAuth');
+const ctrl         = require('../controllers/aiController');
 
-// Admin must be logged in to use AI features
+// Admin routes
 router.post('/report/:productId',   adminAuth, ctrl.generateReport);
 router.post('/forecast/:productId', adminAuth, ctrl.generateForecast);
+
+// Investor routes — investor can only access their own product's AI
+router.post('/investor/report',   investorAuth, ctrl.generateInvestorReport);
+router.post('/investor/forecast', investorAuth, ctrl.generateInvestorForecast);
 
 module.exports = router;

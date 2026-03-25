@@ -118,3 +118,109 @@ ROI: ${metrics.roi.toFixed(1)}%
     res.json({ forecast, language, productName: product.name, hasHistory: snapshots.length > 0 });
   } catch (err) { next(err); }
 };
+
+// POST /api/ai/investor/report  (investor auth — uses productId from token)
+exports.generateInvestorReport = async (req, res, next) => {
+  try {
+    const { language = 'english' } = req.body;
+    const productId = req.investor.productId;
+
+    const product   = await Product.findById(productId);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+
+    const investors = await ProductAccess.find({ product: product._id })
+      .select('investorName investedAmount profitSharePct');
+    const metrics   = calcMetrics({ ...product.toObject(), investors });
+
+    const myShare = metrics.investorShares.find(
+      i => i.investorName === req.investor.investorName
+    );
+
+    const isBangla = language === 'bangla';
+
+    const systemPrompt = isBangla
+      ? 'তুমি একজন expert financial analyst। তুমি বাংলায় investor-focused report লেখো। সব সংখ্যা ৳ দিয়ে দেখাও।'
+      : 'You are an expert financial analyst. Write an investor-focused financial report in English. Show all amounts with ৳ symbol.';
+
+    const dataText = `
+Product: ${product.name} | Category: ${product.category}
+Revenue: ৳${product.revenue} | Expenses: ৳${product.expenses}
+Gross Profit: ৳${metrics.profit} | Profit Margin: ${metrics.margin.toFixed(1)}%
+Total Capital: ৳${metrics.totalCapital} | ROI: ${metrics.roi.toFixed(1)}%
+Company Value: ৳${metrics.companyValue}
+My Investment: ৳${req.investor.investedAmount} | My Profit Share %: ${req.investor.profitSharePct}%
+My Profit Amount: ৳${myShare?.profitAmount || 0} | My Equity: ${myShare?.equityPct?.toFixed(1) || 0}%
+Total Investors: ${investors.length}
+    `.trim();
+
+    const userPrompt = isBangla
+      ? `নিচের data দিয়ে একটি investor-focused financial report তৈরি করো। অন্তর্ভুক্ত করো: ১) Business Overview, ২) Profit & Revenue Analysis, ৩) My Investment Performance, ৪) Equity Position, ৫) Key Observations, ৬) Outlook।\n\n${dataText}`
+      : `Generate an investor-focused financial report using the data below. Include: 1) Business Overview, 2) Profit & Revenue Analysis, 3) My Investment Performance, 4) Equity Position, 5) Key Observations, 6) Outlook.\n\n${dataText}`;
+
+    const completion = await getOpenAI().chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user',   content: userPrompt },
+      ],
+      max_tokens: 1500,
+    });
+
+    res.json({ report: completion.choices[0].message.content, language, productName: product.name });
+  } catch (err) { next(err); }
+};
+
+// POST /api/ai/investor/forecast  (investor auth)
+exports.generateInvestorForecast = async (req, res, next) => {
+  try {
+    const { language = 'english' } = req.body;
+    const productId = req.investor.productId;
+
+    const product   = await Product.findById(productId);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+
+    const snapshots = await Snapshot.find({ product: product._id })
+      .sort({ year: 1, month: 1 }).limit(6);
+
+    const investors = await ProductAccess.find({ product: product._id })
+      .select('investorName investedAmount profitSharePct');
+    const metrics   = calcMetrics({ ...product.toObject(), investors });
+
+    const myShare = metrics.investorShares.find(
+      i => i.investorName === req.investor.investorName
+    );
+
+    const isBangla = language === 'bangla';
+
+    const systemPrompt = isBangla
+      ? 'তুমি একজন expert financial forecaster। তুমি বাংলায় investor-focused predictions দাও। সংখ্যা ৳ দিয়ে দেখাও।'
+      : 'You are an expert financial forecaster. Give investor-focused predictions in English. Show amounts with ৳ symbol.';
+
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const historyText = snapshots.length > 0
+      ? snapshots.map(s => `${MONTHS[s.month-1]} ${s.year}: Revenue ৳${s.data.revenue}, Profit ৳${s.data.profit}`).join('\n')
+      : 'No historical data available yet.';
+
+    const currentText = `
+Revenue: ৳${product.revenue} | Expenses: ৳${product.expenses}
+Profit: ৳${metrics.profit} | Margin: ${metrics.margin.toFixed(1)}%
+My Investment: ৳${req.investor.investedAmount} | My Current Profit: ৳${myShare?.profitAmount || 0}
+ROI: ${metrics.roi.toFixed(1)}%
+    `.trim();
+
+    const userPrompt = isBangla
+      ? `নিচের data দেখে আগামী মাসের investor-focused forecast দাও। অন্তর্ভুক্ত করো: ১) Revenue Forecast, ২) Profit Forecast, ৩) My Expected Returns, ৪) Risk Factors, ৫) Growth Opportunities।\n\nHistorical:\n${historyText}\n\nCurrent:\n${currentText}`
+      : `Based on the data below, provide an investor-focused forecast for next month. Include: 1) Revenue Forecast, 2) Profit Forecast, 3) My Expected Returns, 4) Risk Factors, 5) Growth Opportunities.\n\nHistorical:\n${historyText}\n\nCurrent:\n${currentText}`;
+
+    const completion = await getOpenAI().chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user',   content: userPrompt },
+      ],
+      max_tokens: 1200,
+    });
+
+    res.json({ forecast: completion.choices[0].message.content, language, productName: product.name, hasHistory: snapshots.length > 0 });
+  } catch (err) { next(err); }
+};
