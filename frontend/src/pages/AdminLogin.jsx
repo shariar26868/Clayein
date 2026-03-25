@@ -143,6 +143,15 @@ export default function AdminLogin() {
             </button>
           </form>
         </div>
+
+        {/* Investor link */}
+        <div style={{ textAlign:'center', marginTop:24 }}>
+          <span style={{ fontSize:13, color:'var(--muted)' }}>Investor? </span>
+          <button type="button" onClick={() => navigate('/investor/login')}
+            style={{ background:'none', border:'none', cursor:'pointer', fontSize:13, fontFamily:'inherit', color:'var(--cyan)', fontWeight:600, padding:0 }}>
+            Login here →
+          </button>
+        </div>
       </div>
     </div>
   );
