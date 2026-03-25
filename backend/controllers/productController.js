@@ -115,7 +115,7 @@
 
 const Product       = require('../models/Product');
 const ProductAccess = require('../models/ProductAccess');
-const { calcMetrics } = require('../utils/calcEngine');
+const { calcMetrics, getTierPct } = require('../utils/calcEngine');
 
 // helper: recalculate stock value from qty x price
 function autoStock(body, existing) {
@@ -188,22 +188,17 @@ exports.remove = async (req, res, next) => {
 // POST /api/products/:id/investors
 exports.addInvestor = async (req, res, next) => {
   try {
-    const { username, password, investorName, investedAmount, profitSharePct } = req.body;
+    const { username, password, investorName, investedAmount } = req.body;
 
-    const existing = await ProductAccess.find({ product: req.params.id });
-    const usedPct  = existing.reduce((s, i) => s + i.profitSharePct, 0);
-    if (usedPct + Number(profitSharePct) > 100) {
-      return res.status(400).json({
-        error: 'Total profit share exceeds 100%. Available: ' + (100 - usedPct) + '%'
-      });
-    }
+    // Auto-calculate tier % from invested amount
+    const profitSharePct = getTierPct(Number(investedAmount));
 
     const access = await ProductAccess.create({
       product:        req.params.id,
       username,
       passwordHash:   password,
       investorName,
-      investedAmount,
+      investedAmount: Number(investedAmount),
       profitSharePct,
     });
 

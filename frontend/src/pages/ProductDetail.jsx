@@ -7,6 +7,7 @@ import EquityBreakdown   from '../components/EquityBreakdown';
 import TrendChart        from '../components/TrendChart';
 import AlertBox          from '../components/AlertBox';
 import { fmt, pct }      from '../utils/format';
+import { getTierPct }    from '../utils/calc';
 import AIReportModal    from '../components/AIReportModal';
 import ThemeToggle      from '../components/ThemeToggle';
 
@@ -69,7 +70,7 @@ export default function ProductDetail() {
   const [form,      setForm]      = useState({});
   const [rulesEdit, setRulesEdit] = useState(false);
   const [showInvestorModal, setShowInvestorModal] = useState(false);
-  const [invForm,   setInvForm]   = useState({ username:'', password:'', investorName:'', investedAmount:'', profitSharePct:'' });
+  const [invForm,   setInvForm]   = useState({ username:'', password:'', investorName:'', investedAmount:'' });
   const [invError,  setInvError]  = useState('');
   const [showAI,    setShowAI]    = useState(false);
 
@@ -125,10 +126,9 @@ export default function ProductDetail() {
       await adminAPI.addInvestor(id, {
         ...invForm,
         investedAmount: Number(invForm.investedAmount),
-        profitSharePct: Number(invForm.profitSharePct),
       });
       setShowInvestorModal(false);
-      setInvForm({ username:'', password:'', investorName:'', investedAmount:'', profitSharePct:'' });
+      setInvForm({ username:'', password:'', investorName:'', investedAmount:'' });
       load();
     } catch (err) { setInvError(err.response?.data?.error || 'Failed'); }
   };
@@ -351,7 +351,7 @@ export default function ProductDetail() {
             : (
               <table className="table">
                 <thead>
-                  <tr><th>Name</th><th>Username</th><th>Invested</th><th>Profit Share</th><th>Equity</th><th></th></tr>
+                  <tr><th>Name</th><th>Username</th><th>Invested</th><th>Tier Claim</th><th>Final Share</th><th>Equity</th><th></th></tr>
                 </thead>
                 <tbody>
                   {investors.map((inv) => {
@@ -361,7 +361,12 @@ export default function ProductDetail() {
                         <td style={{ color: 'var(--acc)', fontWeight: 600 }}>{inv.investorName}</td>
                         <td style={{ color: 'var(--muted2)' }}>{inv.username}</td>
                         <td className="g">{fmt(inv.investedAmount)}</td>
-                        <td className="y">{pct(inv.profitSharePct)} → {fmt(share?.profitAmount || 0)}</td>
+                        <td style={{ color: 'var(--muted2)' }}>{pct(inv.profitSharePct)}</td>
+                        <td className="y">
+                          {pct(share?.profitSharePct || 0)}
+                          {share?.scaled && <span style={{ fontSize:10, color:'var(--muted2)', marginLeft:4 }}>↓scaled</span>}
+                          <span style={{ color:'var(--muted2)', marginLeft:4 }}>→ {fmt(share?.profitAmount || 0)}</span>
+                        </td>
                         <td className="b">{pct(share?.equityPct || 0)}</td>
                         <td>
                           <button className="btn btn-danger" onClick={() => removeInvestor(inv._id)}
@@ -430,7 +435,6 @@ export default function ProductDetail() {
                 { name:'username',       label:'Login Username',      type:'text',     placeholder:'sadek123' },
                 { name:'password',       label:'Login Password',      type:'password', placeholder:'...' },
                 { name:'investedAmount', label:'Invested Amount (৳)', type:'number',   placeholder:'0' },
-                { name:'profitSharePct', label:'Profit Share (%)',    type:'number',   placeholder:'0' },
               ].map(f => (
                 <div key={f.name} className="field">
                   <label>{f.label}</label>
@@ -439,6 +443,29 @@ export default function ProductDetail() {
                     onChange={e => setInvForm(p => ({ ...p, [f.name]: e.target.value }))} required />
                 </div>
               ))}
+
+              {/* Tier preview */}
+              {invForm.investedAmount > 0 && (() => {
+                const tier = getTierPct(Number(invForm.investedAmount));
+                return (
+                  <div style={{
+                    background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.25)',
+                    borderRadius: 12, padding: '12px 16px', fontSize: 13,
+                  }}>
+                    <div style={{ color: 'var(--muted2)', marginBottom: 4, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Auto Tier</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: 'var(--text)' }}>৳{Number(invForm.investedAmount).toLocaleString()}</span>
+                      <span style={{ color: 'var(--acc)', fontWeight: 700, fontSize: 16 }}>
+                        {tier > 0 ? `${tier}% initial claim` : 'Below minimum (৳10,000)'}
+                      </span>
+                    </div>
+                    <div style={{ color: 'var(--muted2)', fontSize: 11, marginTop: 4 }}>
+                      Final % may scale down if total investor claims exceed 85%
+                    </div>
+                  </div>
+                );
+              })()}
+
               {invError && <div className="alert warn"><span className="alert-icon">⚠️</span><span>{invError}</span></div>}
               <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
                 <button type="button" className="btn btn-outline" onClick={() => setShowInvestorModal(false)} style={{ flex: 1 }}>Cancel</button>

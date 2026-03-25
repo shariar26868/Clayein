@@ -1,15 +1,21 @@
 /**
  * BizTrack Calculation Engine
- * Used by backend controllers + copied to frontend/src/utils/calc.js
- *
- * @param {Object} p
- * @param {number} p.revenue
- * @param {number} p.expenses
- * @param {number} p.stock
- * @param {number} p.withdrawn
- * @param {number} p.companyContribution   - capital company put in
- * @param {Array}  p.investors             - [{ investorName, investedAmount, profitSharePct }]
+ * Max Cap Model — Company minimum 15%, investors max 85% total
  */
+
+// Tier table: investedAmount → initial claim %
+function getTierPct(amount) {
+  if (amount >= 90000) return 50;
+  if (amount >= 60000) return 40;
+  if (amount >= 30000) return 30;
+  if (amount >= 20000) return 20;
+  if (amount >= 10000) return 10;
+  return 0;
+}
+
+const COMPANY_MIN_PCT = 15;
+const INVESTOR_MAX_PCT = 85;
+
 function calcMetrics(p) {
   const revenue             = p.revenue             || 0;
   const expenses            = p.expenses            || 0;
@@ -19,47 +25,54 @@ function calcMetrics(p) {
   const investors           = p.investors           || [];
 
   // ── Profit & Loss ──
-  const profit    = revenue - expenses;
-  const margin    = revenue > 0 ? (profit / revenue) * 100 : 0;
-  const expRatio  = revenue > 0 ? (expenses / revenue) * 100 : 0;
-  const cashNet   = profit - withdrawn;
-  const assets    = profit + stock;
+  const profit   = revenue - expenses;
+  const margin   = revenue > 0 ? (profit / revenue) * 100 : 0;
+  const expRatio = revenue > 0 ? (expenses / revenue) * 100 : 0;
+  const cashNet  = profit - withdrawn;
+  const assets   = profit + stock;
 
   // ── Capital & Equity ──
   const totalInvestorAmount = investors.reduce((s, i) => s + (i.investedAmount || 0), 0);
   const totalCapital        = companyContribution + totalInvestorAmount;
-  const companyEquityPct    = totalCapital > 0 ? (companyContribution  / totalCapital) * 100 : 0;
-  const investorEquityPct   = totalCapital > 0 ? (totalInvestorAmount  / totalCapital) * 100 : 0;
+  const companyEquityPct    = totalCapital > 0 ? (companyContribution / totalCapital) * 100 : 0;
+  const investorEquityPct   = totalCapital > 0 ? (totalInvestorAmount / totalCapital) * 100 : 0;
 
-  // ── Profit Distribution ──
-  // Total investor profit share = sum of all investors' profitSharePct
-  const totalInvestorSharePct = investors.reduce((s, i) => s + (i.profitSharePct || 0), 0);
-  const companyProfitSharePct = Math.max(0, 100 - totalInvestorSharePct);
+  // ── Max Cap Profit Distribution ──
+  // Each investor's tier claim based on invested amount
+  const totalClaimPct = investors.reduce((s, i) => s + (i.profitSharePct || getTierPct(i.investedAmount || 0)), 0);
+
+  // If total claim > 85%, scale down proportionally
+  const scalingFactor = totalClaimPct > INVESTOR_MAX_PCT ? INVESTOR_MAX_PCT / totalClaimPct : 1;
+
+  const investorShares = investors.map(inv => {
+    const tierPct  = inv.profitSharePct || getTierPct(inv.investedAmount || 0);
+    const finalPct = tierPct * scalingFactor;
+    return {
+      investorName:   inv.investorName,
+      investedAmount: inv.investedAmount,
+      tierPct,                                          // initial claim
+      profitSharePct: parseFloat(finalPct.toFixed(4)), // final after scaling
+      equityPct:      totalCapital > 0 ? (inv.investedAmount / totalCapital) * 100 : 0,
+      profitAmount:   (profit * finalPct) / 100,
+      scaled:         scalingFactor < 1,
+    };
+  });
+
+  const totalInvestorSharePct = investorShares.reduce((s, i) => s + i.profitSharePct, 0);
+  const companyProfitSharePct = Math.max(COMPANY_MIN_PCT, 100 - totalInvestorSharePct);
   const companyProfitShare    = (profit * companyProfitSharePct) / 100;
-
-  const investorShares = investors.map(inv => ({
-    investorName:   inv.investorName,
-    investedAmount: inv.investedAmount,
-    profitSharePct: inv.profitSharePct,
-    equityPct:      totalCapital > 0 ? (inv.investedAmount / totalCapital) * 100 : 0,
-    profitAmount:   (profit * (inv.profitSharePct || 0)) / 100,
-  }));
 
   // ── Valuation & ROI ──
   const companyValue = totalCapital + assets;
   const roi          = totalCapital > 0 ? (profit / totalCapital) * 100 : 0;
 
   return {
-    // P&L
     profit, margin, expRatio, cashNet, assets,
-    // Capital
     totalInvestorAmount, totalCapital, companyEquityPct, investorEquityPct,
-    // Profit distribution
     companyProfitSharePct, companyProfitShare,
-    totalInvestorSharePct, investorShares,
-    // Valuation
+    totalInvestorSharePct, totalClaimPct, scalingFactor, investorShares,
     companyValue, roi,
   };
 }
 
-module.exports = { calcMetrics };
+module.exports = { calcMetrics, getTierPct };
