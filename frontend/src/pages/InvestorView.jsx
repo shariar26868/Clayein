@@ -287,12 +287,7 @@ export default function InvestorView() {
           }
         </div>
 
-        {product.notes && (
-          <div className="alert info" style={{ marginTop:16 }}>
-            <span className="alert-icon">📝</span>
-            <span>{product.notes}</span>
-          </div>
-        )}
+
       </div>
 
       {showAI && (
