@@ -88,6 +88,19 @@ export default function InvestorView() {
         <div className="section-label" style={{ marginTop:24 }}>Valuation</div>
         <EvalCard totalCapital={m.totalCapital} assets={m.assets} companyValue={m.companyValue} />
 
+        {product.investmentRules && (
+          <>
+            <div className="section-label" style={{ marginTop: 24 }}>Investment Rules</div>
+            <div className="card" style={{ padding: 24 }}>
+              <pre style={{
+                whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                fontSize: 13, lineHeight: 1.9, color: 'var(--muted2)',
+                margin: 0, fontFamily: 'inherit',
+              }}>{product.investmentRules}</pre>
+            </div>
+          </>
+        )}
+
         {product.notes && (
           <div className="alert info" style={{ marginTop:8 }}>
             <span className="alert-icon">📝</span>

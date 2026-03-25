@@ -67,6 +67,7 @@ export default function ProductDetail() {
   const [loading,   setLoading]   = useState(true);
   const [saving,    setSaving]    = useState(false);
   const [form,      setForm]      = useState({});
+  const [rulesEdit, setRulesEdit] = useState(false);
   const [showInvestorModal, setShowInvestorModal] = useState(false);
   const [invForm,   setInvForm]   = useState({ username:'', password:'', investorName:'', investedAmount:'', profitSharePct:'' });
   const [invError,  setInvError]  = useState('');
@@ -90,6 +91,7 @@ export default function ProductDetail() {
         withdrawn:           pRes.data.withdrawn,
         companyContribution: pRes.data.companyContribution,
         notes:               pRes.data.notes,
+        investmentRules:     pRes.data.investmentRules || '',
       });
       setSnapshots(sRes.data);
     } catch { navigate('/'); }
@@ -291,6 +293,49 @@ export default function ProductDetail() {
         {/* Valuation */}
         <div className="section-label" style={{ marginTop: 24 }}>Valuation</div>
         <EvalCard totalCapital={m.totalCapital} assets={m.assets} companyValue={m.companyValue} />
+
+        {/* Investment Rules */}
+        <div className="section-label" style={{ marginTop: 24 }}>
+          Investment Rules
+          <button
+            className="btn btn-outline"
+            onClick={() => setRulesEdit(r => !r)}
+            style={{ marginLeft: 'auto', fontSize: 11, padding: '5px 14px' }}
+          >
+            {rulesEdit ? 'Preview' : '✏️ Edit'}
+          </button>
+          {rulesEdit && (
+            <button className="btn btn-primary" onClick={saveProduct} disabled={saving}
+              style={{ fontSize: 11, padding: '5px 14px' }}>
+              {saving ? 'Saving...' : 'Save'}
+            </button>
+          )}
+        </div>
+        <div className="card" style={{ padding: rulesEdit ? 16 : 24 }}>
+          {rulesEdit ? (
+            <textarea
+              name="investmentRules"
+              value={form.investmentRules || ''}
+              onChange={h}
+              placeholder="Investment rules লিখুন..."
+              rows={16}
+              style={{
+                width: '100%', background: 'var(--s2)', border: '1px solid var(--border2)',
+                borderRadius: 10, padding: '12px 14px', color: 'var(--text)',
+                fontSize: 13, lineHeight: 1.8, resize: 'vertical', outline: 'none',
+                fontFamily: 'inherit',
+              }}
+            />
+          ) : (
+            form.investmentRules
+              ? <pre style={{
+                  whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                  fontSize: 13, lineHeight: 1.9, color: 'var(--muted2)',
+                  margin: 0, fontFamily: 'inherit',
+                }}>{form.investmentRules}</pre>
+              : <div style={{ color: 'var(--muted2)', fontSize: 13 }}>No investment rules set yet.</div>
+          )}
+        </div>
 
         {/* Investors */}
         <div className="section-label" style={{ marginTop: 24 }}>

@@ -65,9 +65,10 @@ exports.getMyProduct = async (req, res, next) => {
 
     res.json({
       product: {
-        name:     product.name,
-        category: product.category,
-        notes:    product.notes,
+        name:            product.name,
+        category:        product.category,
+        notes:           product.notes,
+        investmentRules: product.investmentRules || '',
       },
       metrics,
       myShare: {

@@ -45,6 +45,7 @@ const productSchema = new mongoose.Schema({
 
   isActive:            { type: Boolean, default: true },
   notes:               { type: String, default: '' },
+  investmentRules:     { type: String, default: '' },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);
