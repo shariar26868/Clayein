@@ -10,6 +10,7 @@ import { fmt, pct }      from '../utils/format';
 import { getTierPct }    from '../utils/calc';
 import AIReportModal    from '../components/AIReportModal';
 import ThemeToggle      from '../components/ThemeToggle';
+import InvestmentModelCard from '../components/InvestmentModelCard';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
@@ -380,6 +381,10 @@ export default function ProductDetail() {
             )
           }
         </div>
+
+        {/* Investment Model */}
+        <div className="section-label" style={{ marginTop: 24 }}>Investment Model</div>
+        <InvestmentModelCard metrics={m} />
 
         {/* Trend */}
         <div className="section-label" style={{ marginTop: 24 }}>Monthly Trend</div>

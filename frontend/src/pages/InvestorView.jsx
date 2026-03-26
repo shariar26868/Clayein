@@ -8,6 +8,7 @@ import ProfitShareCard        from '../components/ProfitShareCard';
 import AlertBox               from '../components/AlertBox';
 import { fmt, pct }           from '../utils/format';
 import ThemeToggle            from '../components/ThemeToggle';
+import InvestmentModelCard    from '../components/InvestmentModelCard';
 
 // ── Download helper ──────────────────────────────────────────────
 function downloadTxt(filename, text) {
@@ -237,27 +238,9 @@ export default function InvestorView() {
         <div className="section-label" style={{ marginTop:24 }}>Valuation</div>
         <EvalCard totalCapital={m.totalCapital} assets={m.assets} companyValue={m.companyValue} />
 
-        {/* Investment Rules */}
-        {product.investmentRules && (
-          <>
-            <div className="section-label" style={{ marginTop:24 }}>
-              Investment Rules
-              <button
-                className="btn btn-outline"
-                onClick={() => downloadTxt(`${product.name}_Investment_Rules.txt`, product.investmentRules)}
-                style={{ marginLeft:'auto', fontSize:11, padding:'5px 14px' }}>
-                ⬇️ Download
-              </button>
-            </div>
-            <div className="card" style={{ padding:24 }}>
-              <pre style={{
-                whiteSpace:'pre-wrap', wordBreak:'break-word',
-                fontSize:13, lineHeight:1.9, color:'var(--muted2)',
-                margin:0, fontFamily:'inherit',
-              }}>{product.investmentRules}</pre>
-            </div>
-          </>
-        )}
+        {/* Investment Model */}
+        <div className="section-label" style={{ marginTop:24 }}>Investment Model</div>
+        <InvestmentModelCard metrics={m} myShare={myShare} />
 
         {/* Smart Insights */}
         <div className="section-label" style={{ marginTop:24 }}>Smart Insights</div>

@@ -1,9 +1,11 @@
 export function getTierPct(amount) {
-  if (amount >= 90000) return 50;
-  if (amount >= 60000) return 40;
-  if (amount >= 30000) return 30;
-  if (amount >= 20000) return 20;
-  if (amount >= 10000) return 10;
+  if (amount >= 130000) return 70;
+  if (amount >= 110000) return 60;
+  if (amount >= 90000)  return 50;
+  if (amount >= 60000)  return 40;
+  if (amount >= 30000)  return 30;
+  if (amount >= 20000)  return 20;
+  if (amount >= 10000)  return 10;
   return 0;
 }
 

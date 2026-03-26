@@ -74,9 +74,11 @@ exports.getMyProduct = async (req, res, next) => {
       myShare: {
         investorName:   req.investor.investorName,
         investedAmount: investedAmount,
-        profitSharePct: profitSharePct,
-        profitAmount:   myShare?.profitAmount || 0,
-        equityPct:      myShare?.equityPct    || 0,
+        profitSharePct: myShare?.profitSharePct || profitSharePct,
+        tierPct:        myShare?.tierPct        || profitSharePct,
+        profitAmount:   myShare?.profitAmount   || 0,
+        equityPct:      myShare?.equityPct      || 0,
+        scaled:         myShare?.scaled         || false,
       },
     });
   } catch (err) { next(err); }
